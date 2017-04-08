@@ -1,2 +1,1 @@
-I'm a readme!
-I'm an edited readme!
+I'm a readme! I'm an edited readme and I have all the information about how to use the Super Mario clone!
