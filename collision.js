@@ -6,7 +6,7 @@ console.log('me');
 // height of world is 100
 
 
-function gameObjects(objectArray, worldHeight, worldWidth) {
+function GameObjects(objectArray, worldHeight, worldWidth) {
 	this.objectArray = objectArray;
 	this.check = function(Mario) {
 		var leftEdge = Mario.x, rightEdge = Mario.x + Mario.width;
