@@ -5,51 +5,46 @@ console.log('me');
 // height goes down, width goes to the right
 // height of world is 100
 
+// for each object in the object array, check() expects: leftEdge, rightEdge, bottomEdge, topEdge to all be populated, and a triggerCollision method 
+//	same goes for Mario (or whichever object is passed in)
 
-function GameObjects(objectArray, worldHeight, worldWidth) {
+function Collision(objectArray, worldHeight, worldWidth) {
 	this.objectArray = objectArray;
 	this.check = function(Mario) {
+		// set-up some variables
 		var leftEdge = Mario.x, rightEdge = Mario.x + Mario.width;
 		var topEdge = Mario.y, bottomEdge = Mario.y + Mario.height;
-		var anyCollisions = false;
-		for (var gameObject from this.objectArray) {
+		var collisionCount = 0;
+		
+		// check world borders
+		if (leftEdge < 0) {	
+			collisionCount++;
+			Mario.triggerCollision('left wall') 
+		} else if (rightEdge> worldWidth) { 
+			collisionCount++;
+			Mario.triggerCollision('right wall') 
+		}
+		if (topEdge < 0) { 
+			collisionCount++;
+			Mario.triggerCollision('top wall') 
+		} else if (bottomEdge > worldHeight) { 
+			collisionCount++;
+			Mario.triggerCollision('bottom wall') 
+		}
+		
+		// loop through game objects
+		for (var gameObject of this.objectArray) {
 			if (rightEdge > gameObject.leftEdge && leftEdge < gameObject.rightEdge) {
 				if (bottomEdge > gameObject.topEdge && topEdge < gameObject.bottomEdge) {
-					gameObject.triggerCollision();
-					Mario.triggerCollision();
-					anyCollisions = true;
+					gameObject.triggerCollision(Mario);
+					Mario.triggerCollision(gameObject);
+					collisionCount++;
 				}
 			}
 		}
-		return anyCollisions;
+		return collisionCount;
 	}
 }
 
-// Make a mario for testing
-function Mario() {
-	this.x = 50;
-	this.y = 90;
-	this.width = 10;
-	this.height = 10;
-	this.triggerCollision = function() {
-		console.log('mario says there\'s a collision');
-	}
-}
-
-// Make a bad guy for testing
-function FakeBaddie1(name, x, y, width, height) {
-	if (!name || !x || !y || !width || !height) {
-		console.log('all five parameters are required');
-	}
-	this.leftEdge = x;
-	this.rightEdge = x + width;
-	this.topEdge = y;
-	this.bottomEdge = y + height;
-	this.move_right = function() {
-		this.x += 5;
-	}
-	this.triggerCollision() = {
-		console.log('fake baddie says there\'s a collision');
-	}
-}
+module.exports = Collision;
 
