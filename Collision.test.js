@@ -7,8 +7,9 @@ function Mario(x, y, width, height) {
 	this.width = width || 10;
 	this.height = height || 10;
 	this.messages = [];
+	this.collisionMock = jest.fn();
 	this.triggerCollision = function(collidesWith) {
-		this.messages.push('mario collided with ' + (typeof(collidesWith) === 'string'? collidesWith: collidesWith.name));
+		this.collisionMock(collidesWith);
 	}
 	this.clearMessages = function() {
 		this.messages = [];
@@ -34,12 +35,11 @@ function FakeBaddie(name, x, y, width, height) {
 }
 
 // make a tile array?
-var array = [
-	new FakeBaddie('alfred', 10, 10, 10, 10),
-	new FakeBaddie('barty', 40, 10, 10, 10),
-	new FakeBaddie('charles', 80, 10, 10, 10),
-	new FakeBaddie('richard', 40, 90, 10, 10)
-];
+const alfred = new FakeBaddie('alfred', 10, 10, 10, 10),
+	barty = new FakeBaddie('barty', 40, 10, 10, 10),
+	charles = new FakeBaddie('charles', 80, 10, 10, 10),
+	richard = new FakeBaddie('richard', 40, 90, 10, 10);
+var array = [alfred, barty, charles, richard];
 
 var collision = new Collision(array, 100, 100);
 
@@ -47,59 +47,72 @@ describe('Set-up', () => {
 	test('objectArray has 4 baddies', () => {
 		expect(collision.objectArray.length).toBe(4);
 	});
+	let mockFn = jest.fn();
+	test('mockFn is a function', () => {
+		expect(typeof(mockFn)).toBe('function');
+	});
+	mockFn('a');
+	test('mockFn was called once', () => {
+		expect(mockFn.mock.calls.length).toBe(1);
+	});
+	test('mockFn was called with \'a\'', () => {
+		expect(mockFn.mock.calls[0]).toEqual(['a']);
+	});
 });
 describe('Mario straddling left wall triggers collision', () => {
 	let mario = new Mario(-5, 15);
-	test('one collision', () => {
+	test('one collision returned', () => {
 		expect(collision.check(mario)).toBe(1);
 	});
 	test('one collision message', () => {
-		expect(mario.messages.length).toBe(1);
+		expect(mario.collisionMock.mock.calls.length).toBe(1);
 	});
 	test('mario collided with left wall', () => {
-		expect(mario.messages).toEqual(['mario collided with left wall']);
+		expect(mario.collisionMock.mock.calls).toEqual([['left wall']]);
 	});
 });
 describe('Mario hits alfred when inside', () => {
 	let mario = new Mario(15, 15, 5, 5);
-	collision.check(mario);
+	test('one collision returned', () => {
+		expect(collision.check(mario)).toBe(1);
+	});
 	test('mario collided with alfred', () => {
-		expect(mario.messages).toEqual(['mario collided with alfred']);
+		expect(mario.collisionMock.mock.calls[0][0]).toBe(alfred);
 	});	
 });
 describe('Mario collides with no one while too low', () => {
 	let mario = new Mario(15, 55, 5, 5);
-	collision.check(mario);
+	test('no collisions returned', () => {
+		expect(collision.check(mario)).toBe(0);
+	});
 	test('mario has no collisions', () => {
-		expect(mario.messages.length).toBe(0);
+		expect(mario.collisionMock.mock.calls.length).toBe(0);
 	});
 });
 describe('Mario collides with barty and richard with corner overlap', () => {
 	let mario = new Mario(45, 15, 10, 80);
-	collision.check(mario);
-	test('mario had two collisions', () => {
-		expect(mario.messages.length).toBe(2);
+	test('two collisions returned', () => {
+		expect(collision.check(mario)).toBe(2);
 	});
 	test('mario hit barty', () => {
-		expect(mario.messages.includes('mario collided with barty')).toBe(true);
+		expect(mario.collisionMock.mock.calls[0][0]).toBe(barty);
 	});
 	test('mario hit richard', () => {
-		expect(mario.messages.includes('mario collided with richard')).toBe(true);
+		expect(mario.collisionMock.mock.calls[1][0]).toBe(richard);
 	});
 });
 describe('Mario collides with top wall, right wall, and charles (corner)', () => {
 	let mario = new Mario(85, -5, 20, 20);
-	collision.check(mario);
-	test('mario had three collisions', () => {
-		expect(mario.messages.length).toBe(3);
-	});
-	test('mario hit charles', () => {
-		expect(mario.messages.includes('mario collided with charles')).toBe(true);
-	});
-	test('mario hit top wall', () => {
-		expect(mario.messages.includes('mario collided with top wall')).toBe(true);
+	test('three collision returned', () => {
+		expect(collision.check(mario)).toBe(3);
 	});
 	test('mario hit right wall', () => {
-		expect(mario.messages.includes('mario collided with right wall')).toBe(true);
+		expect(mario.collisionMock.mock.calls[0][0]).toBe('right wall');
+	});
+	test('mario hit top wall', () => {
+		expect(mario.collisionMock.mock.calls[1][0]).toBe('top wall');
+	});
+	test('mario hit charles', () => {
+		expect(mario.collisionMock.mock.calls[2][0]).toBe(charles);
 	});
 });
